@@ -20,21 +20,17 @@ export class ConfigLoader {
   }
 
   pullRequestLabels(): Array<string> {
-    const rawLabels = this.getValue('PR_LABELS', false, '').toString().trim();
-    if (rawLabels === '') {
-      return [];
-    }
-    return rawLabels.split(',').map((label: string) => label.trim());
+    return this.parsePlaintextList(this.getValue('PR_LABELS', false, ''));
+  }
+
+  excludedHeadBranches(): Array<string> {
+    return this.parsePlaintextList(
+      this.getValue('EXCLUDED_HEAD_BRANCHES', false, ''),
+    );
   }
 
   excludedLabels(): Array<string> {
-    const rawLabels = this.getValue('EXCLUDED_LABELS', false, '')
-      .toString()
-      .trim();
-    if (rawLabels === '') {
-      return [];
-    }
-    return rawLabels.split(',').map((label: string) => label.trim());
+    return this.parsePlaintextList(this.getValue('EXCLUDED_LABELS', false, ''));
   }
 
   mergeMsg(): string {
@@ -90,6 +86,17 @@ export class ConfigLoader {
     }
 
     return defaultVal;
+  }
+
+  private parsePlaintextList(value: string): Array<string> {
+    const rawValue = value.toString().trim();
+    if (rawValue === '') {
+      return [];
+    }
+    return rawValue
+      .split(',')
+      .map((item: string) => item.trim())
+      .filter(Boolean);
   }
 }
 
