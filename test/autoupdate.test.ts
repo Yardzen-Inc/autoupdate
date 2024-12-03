@@ -26,6 +26,10 @@ jest.mock('../src/config-loader');
 beforeEach(() => {
   jest.resetAllMocks();
   jest.spyOn(config, 'githubToken').mockImplementation(() => 'test-token');
+
+  (config.excludedHeadBranches as jest.Mock).mockReturnValue([]);
+  (config.pullRequestFilter as jest.Mock).mockReturnValue('all');
+  (config.excludedLabels as jest.Mock).mockReturnValue([]);
 });
 
 const emptyEvent = {} as WebhookEvent;
@@ -137,6 +141,44 @@ const validPull = {
 const clonePull = () => JSON.parse(JSON.stringify(validPull));
 
 describe('test `prNeedsUpdate`', () => {
+  test.each([
+    [head],
+    ['fake1', head],
+    [head, 'fake2'],
+    ['fake1', head, 'fake2'],
+  ])('pull request HEAD is excluded', async (...testCase) => {
+    (config.excludedHeadBranches as jest.Mock).mockReturnValue(testCase);
+
+    const pull = {
+      ...validPull,
+    };
+
+    const updater = new AutoUpdater(config, emptyEvent);
+    const needsUpdate = await updater.prNeedsUpdate(
+      pull as unknown as PullRequestResponse['data'],
+    );
+    expect(needsUpdate).toEqual(false);
+  });
+
+  test('pull request HEAD is not excluded', async () => {
+    (config.excludedHeadBranches as jest.Mock).mockReturnValue(['fake1']);
+    const scope = nock('https://api.github.com:443')
+      .get(`/repos/${owner}/${repo}/compare/${head}...${base}`)
+      .reply(200, {
+        behind_by: 1,
+      });
+    const pull = {
+      ...validPull,
+    };
+
+    const updater = new AutoUpdater(config, emptyEvent);
+    const needsUpdate = await updater.prNeedsUpdate(
+      pull as unknown as PullRequestResponse['data'],
+    );
+    expect(needsUpdate).toEqual(true);
+    expect(scope.isDone()).toEqual(true);
+  });
+
   test('pull request has already been merged', async () => {
     const pull = {
       merged: true,

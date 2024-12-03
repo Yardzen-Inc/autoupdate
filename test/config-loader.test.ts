@@ -26,7 +26,7 @@ const tests = [
     name: 'excludedHeadBranches',
     envVar: 'EXCLUDED_HEAD_BRANCHES',
     required: false,
-    default: null,
+    default: [],
     type: 'list',
   },
   {

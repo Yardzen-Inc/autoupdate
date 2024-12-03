@@ -20,17 +20,21 @@ export class ConfigLoader {
   }
 
   pullRequestLabels(): Array<string> {
-    return this.parsePlaintextList(this.getValue('PR_LABELS', false, ''));
+    return ConfigLoader.parsePlaintextList(
+      this.getValue('PR_LABELS', false, ''),
+    );
   }
 
   excludedHeadBranches(): Array<string> {
-    return this.parsePlaintextList(
+    return ConfigLoader.parsePlaintextList(
       this.getValue('EXCLUDED_HEAD_BRANCHES', false, ''),
     );
   }
 
   excludedLabels(): Array<string> {
-    return this.parsePlaintextList(this.getValue('EXCLUDED_LABELS', false, ''));
+    return ConfigLoader.parsePlaintextList(
+      this.getValue('EXCLUDED_LABELS', false, ''),
+    );
   }
 
   mergeMsg(): string {
@@ -88,9 +92,9 @@ export class ConfigLoader {
     return defaultVal;
   }
 
-  private parsePlaintextList(value: string): Array<string> {
+  private static parsePlaintextList(value: string): Array<string> {
     const rawValue = value.toString().trim();
-    if (rawValue === '') {
+    if (rawValue === '' || rawValue === null || rawValue === undefined) {
       return [];
     }
     return rawValue

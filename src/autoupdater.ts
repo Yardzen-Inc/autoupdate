@@ -273,7 +273,7 @@ export class AutoUpdater {
     // If it is, skip update.
     const excludedHeadBranches = this.config
       .excludedHeadBranches()
-      .map(this.stripRefsHeadPrefix)
+      ?.map(this.stripRefsHeadPrefix)
       .filter(Boolean);
 
     if (excludedHeadBranches.length > 0) {
