@@ -23,6 +23,13 @@ const tests = [
     type: 'string',
   },
   {
+    name: 'excludedHeadBranches',
+    envVar: 'EXCLUDED_HEAD_BRANCHES',
+    required: false,
+    default: null,
+    type: 'list',
+  },
+  {
     name: 'pullRequestLabels',
     envVar: 'PR_LABELS',
     required: false,
