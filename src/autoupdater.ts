@@ -243,6 +243,14 @@ export class AutoUpdater {
     }
   }
 
+  /** Strips the refs/heads/ prefix from a git ref string.
+   * @param ref The git ref string to strip the prefix from.
+   * @returns The ref string with the prefix removed, e.g. refs/heads/main -> main.
+   */
+  private stripRefsHeadPrefix(ref: string): string {
+    return ref.replace(/^refs\/heads\//, '');
+  }
+
   async prNeedsUpdate(pull: PullRequest): Promise<boolean> {
     if (pull.merged === true) {
       ghCore.warning('Skipping pull request, already merged.');
@@ -259,6 +267,24 @@ export class AutoUpdater {
         `Skipping pull request, fork appears to have been deleted.`,
       );
       return false;
+    }
+
+    // Check if the head branch is excluded from updates.
+    // If it is, skip update.
+    const excludedHeadBranches = this.config
+      .excludedHeadBranches()
+      .map(this.stripRefsHeadPrefix)
+      .filter(Boolean);
+
+    if (excludedHeadBranches.length > 0) {
+      const pullRequestBranchName = this.stripRefsHeadPrefix(pull.head.ref);
+
+      if (excludedHeadBranches.includes(pullRequestBranchName)) {
+        ghCore.info(
+          `Pull request has excluded head branch '${pull.head.ref}', skipping update.`,
+        );
+        return false;
+      }
     }
 
     try {
@@ -285,7 +311,7 @@ export class AutoUpdater {
       return false;
     }
 
-    // First check if this PR has an excluded label on it and skip further
+    // Check if this PR has an excluded label on it and skip further
     // processing if so.
     const excludedLabels = this.config.excludedLabels();
     if (excludedLabels.length > 0) {
